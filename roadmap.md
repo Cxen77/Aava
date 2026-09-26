@@ -1,0 +1,34 @@
+# SAATHI update
+- [x] Restore the earlier Talk to SAATHI button treatment on Home.
+- [x] Make the check-in completion animation visible and replayable without changing progress.
+- [x] Make Home a social wellbeing feed with compact check-in and working feed actions.
+- [x] Make Talk a Chats/Groups inbox and preserve AI and listener conversations.
+- [x] Add working composition, send feedback, and persistent history to both chat types.
+- [x] Expand moderated communities and improve discovery and group posts.
+- [x] Add profile journey, engagement badges, and restrained motion.
+- [x] Verify both roles and mobile/desktop presentation.
+- [x] Redesign the existing screens with indigo/lavender/coral/mint styling and purposeful animation.
+- [x] Strengthen companion and listener chats with saved history, send feedback, timestamps, sent indicators, and empty states.
+- [x] Verify refreshed mobile and desktop interactions for both roles.
+- [x] Separate Talk group conversations from Community posts with local chat history and joining.
+- [x] Make the journey path and badges interactive using Motion.
+- [x] Verify chat, joining, journey, and badges on mobile and desktop.
+- [x] Add milestone completion celebration with clear next-step guidance.
+- [x] Add badge collection progress and earned/locked filters with reduced-motion support.
+- [x] Link milestone guidance to the relevant app section.
+- [x] Add theme filters and sorting for badge collection browsing.
+- [x] Show active and visited states for milestone destination actions.
+- [x] Show badge theme, unlock condition, and progress in badge details.
+- [x] Add an original animated SAATHI companion to Home, onboarding, check-in, and selective empty/progress states.
+- [x] Make mood selection, daily completion, warmth streak, and progress feedback coherent and supportive.
+- [x] Replace icon badges with six illustrated collectibles and animate their collection/detail/unlock states.
+- [x] Verify check-in to Profile progression and both viewport sizes, including reduced motion.
+- [x] Show illustrated badges on journey milestones and expand collection to about 30 achievable badges.
+- [x] Make check-in warmth celebration and companion/chat reactions visibly animated, with reduced-motion support.
+- [x] Simplify Support screen colours while preserving its actions and safety copy.
+- [x] Add optional, customizable local check-in reminders with pause/dismiss controls that do not affect progress.
+- [x] Verify journey, chat, Support, reminders, and check-in flows at mobile and desktop sizes.
+- [x] Make the post-tap warmth celebration unmistakably animated, replayable, and reduced-motion friendly.
+- [x] Enlarge the chat companion and prepare expressive reactions for distinct future chat events.
+- [x] Make the Home companion's tail, eyes, and ears visibly active with distinct reactions for every mood.
+- [x] Add Check-in Calendar / mood history from Home and Profile with animated days, details, summary, and trend.
