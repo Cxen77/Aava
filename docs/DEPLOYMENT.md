@@ -223,3 +223,36 @@ In the hosting provider dashboard (Render / Railway):
 | `ALERT_THRESHOLDS_JSON` | API | `{"consecutiveLowDays":3,"confidenceCutoff":0.75}` | Distress trigger parameters |
 | `EXPO_PUBLIC_API_URL`| Mobile | `https://api.saathi.org/v1` | Public HTTPS REST endpoint |
 | `EXPO_PUBLIC_WS_URL` | Mobile | `wss://api.saathi.org` | Public WebSocket endpoint |
+| `FIREBASE_PROJECT_ID`| API | `aava-93398` | Firebase Project ID |
+| `FIREBASE_CLIENT_EMAIL`| API | `firebase-adminsdk-...@aava-93398.iam.gserviceaccount.com` | Firebase Admin Service Account Email |
+| `FIREBASE_PRIVATE_KEY` | API | `-----BEGIN PRIVATE KEY-----\n...` | Firebase Admin Service Account Key |
+
+---
+
+## 8. Firebase Authentication & Native Google Sign-In Setup
+
+### 8.1 Architecture & Credential Placement
+- **Frontend File:** `./google-services.json` placed at the Expo root directory (referenced by `app.json` → `android.googleServicesFile`).
+- **Web Client ID:** `74698770332-70a7d4a31mibv4ftksaoheek22im2s0v.apps.googleusercontent.com` (Used as the server/audience Client ID).
+- **Security Rule:** Web Client Secrets, Service Account Private Keys, and Database Secrets are strictly server-side and never placed in client code or `EXPO_PUBLIC_*`.
+
+### 8.2 Android Package & SHA-1 Requirements
+- **Android Package:** `org.saathi.app` (must match Firebase Console Android app).
+- **SHA-1 Fingerprint:** Ensure the SHA-1 of the keystore used by EAS Build is registered under **Firebase Console → Project settings → Your apps → Android app (`org.saathi.app`)**.
+- Check or view your EAS signing certificate fingerprint via:
+  ```bash
+  eas credentials -p android
+  ```
+
+### 8.3 Expo Development Build (Native Google Sign-In)
+Because native Google Sign-In requires native Google Play Services, it does not run inside standard Expo Go:
+1. Build an internal development client:
+   ```bash
+   eas build --profile development --platform android
+   ```
+2. Install the resulting `.apk` on your test device or emulator.
+3. Start the local bundler:
+   ```bash
+   npx expo start --dev-client
+   ```
+4. In web/browser mode, the app uses Firebase `GoogleAuthProvider` popup automatically.

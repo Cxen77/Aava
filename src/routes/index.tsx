@@ -1,4 +1,5 @@
 import { NotificationStudio } from "@/components/NotificationStudio";
+import { signInWithGoogle, signOut as performAuthSignOut, subscribeAuthState } from "@/services/auth/authService";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
@@ -157,6 +158,29 @@ function SaathiApp() {
   const [showExit, setShowExit] = useState(false);
   const [introReady, setIntroReady] = useState(true);
 
+  useEffect(() => {
+    const unsub = subscribeAuthState((fbUser) => {
+      if (fbUser) {
+        try {
+          const currentScreen = localStorage.getItem("saathi-screen");
+          if (currentScreen === "login") {
+            setScreen("home");
+            localStorage.setItem("saathi-screen", "home");
+          }
+        } catch {}
+      }
+    });
+    const handleLogoutEvt = () => {
+      setScreen("login");
+      try { localStorage.setItem("saathi-screen", "login"); } catch {}
+    };
+    window.addEventListener("aava:auth-logout", handleLogoutEvt);
+    return () => {
+      unsub();
+      window.removeEventListener("aava:auth-logout", handleLogoutEvt);
+    };
+  }, []);
+
   const openGroup = (group: CommunityData) => { setSelectedGroup(group); go("group"); };
   const go = (next: Screen) => {
     setHistoryStack((s) => [...s, screen]);
@@ -182,6 +206,14 @@ function SaathiApp() {
     setScreen(nextScreen);
     try { localStorage.setItem("saathi-screen", nextScreen); } catch {}
   };
+  const handleLogout = async () => {
+    try {
+      await performAuthSignOut();
+    } catch {}
+    setScreen("login");
+    try { localStorage.setItem("saathi-screen", "login"); } catch {}
+  };
+
   const navigateTab = (next: Screen) => {
     setHistoryStack([]);
     setScreen(next);
@@ -248,17 +280,17 @@ function SaathiApp() {
           {screen === "emergency" && <Emergency back={back} />}
           {screen === "notifications" && <Notifications back={back} go={go} />}{screen === "notification-studio" && <><Header title="Notification Studio" back={back}/><NotificationStudio onNavigate={(t)=>{const m:Record<string,Screen>={checkin:"checkin",evening:"checkin",supportive:"saathi-chat",listener:"human-chat",group:"group-chat",milestone:"milestones",badge:"milestones",streak:"milestones"};go(m[t] ?? "home");}}/></>}
            {screen === "reminders" && <CheckInReminders back={back} />}
-          {screen === "profile" && <Profile go={go} logout={() => { setScreen("login"); try { localStorage.setItem("saathi-screen", "login"); } catch {} }} />}
+          {screen === "profile" && <Profile go={go} logout={handleLogout} />}
           {screen === "edit-profile" && <EditProfile back={back} />}
           {screen === "checkin-history" && <><Header title="Your check-ins" subtitle="See how you've been feeling over time." back={back}/><CheckinCalendar onCheckIn={() => go("checkin")} onTalk={() => go("saathi-chat")} /></>}
-          {screen === "settings" && <SettingsScreen go={go} logout={() => { setScreen("login"); try { localStorage.setItem("saathi-screen", "login"); } catch {} }} back={back} />}
+          {screen === "settings" && <SettingsScreen go={go} logout={handleLogout} back={back} />}
           {screen === "privacy" && <Privacy back={back} />}
           {screen === "consent" && <Consent back={back} />}
           {screen === "listener-home" && <ListenerHome go={go} available={available} setAvailable={setAvailable} />}
           {screen === "requests" && <Requests go={go} />}
           {screen === "listener-messages" && <ListenerMessages go={go} />}
           {screen === "listener-history" && <ListenerHistory />}
-          {screen === "listener-profile-edit" && <ListenerProfileEdit available={available} setAvailable={setAvailable} logout={() => { setScreen("login"); try { localStorage.setItem("saathi-screen", "login"); } catch {} }} />}
+          {screen === "listener-profile-edit" && <ListenerProfileEdit available={available} setAvailable={setAvailable} logout={handleLogout} />}
         </main>
         <BottomNav items={nav} active={activeRoot} navigate={navigateTab} />
         {showExit && <ConfirmDialog title="End this conversation?" body="The conversation will be marked complete. You can still reach support again whenever you need." cancel={() => setShowExit(false)} confirm={() => { setShowExit(false); toast("Conversation ended"); navigateTab(role === "user" ? "support" : "listener-history"); }} />}
@@ -521,7 +553,31 @@ function GoogleSignInModal({
 function Login({ enter }: { enter: (r: Role) => void }) {
   const [mode, setMode] = useState<"phone" | "email">("phone");
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [authStatus, setAuthStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, saveProfile] = useProfile();
+
+  const handleRealGoogleSignIn = async () => {
+    if (authStatus === "loading") return;
+    setAuthStatus("loading");
+    setErrorMessage(null);
+    try {
+      const session = await signInWithGoogle();
+      toast.success(`Welcome, ${session.displayName || "friend"}!`);
+      enter("user");
+    } catch (err: any) {
+      if (err.name === "SignInCancelledError") {
+        setAuthStatus("idle");
+        return;
+      }
+      setAuthStatus("error");
+      const cleanMsg = err.message || "Sign-in couldn't be completed. Please try again.";
+      setErrorMessage(cleanMsg);
+      toast.error(cleanMsg);
+    } finally {
+      setAuthStatus("idle");
+    }
+  };
 
   const handleGoogleSuccess = (account: GoogleAccount) => {
     saveProfile({
@@ -545,7 +601,7 @@ function Login({ enter }: { enter: (r: Role) => void }) {
         <p className="text-xs font-semibold text-primary">WELCOME BACK</p>
         <h1 className="mt-2 text-3xl font-semibold">A quiet place to begin.</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Continue with your phone number, email, or Google. This prototype does not create a real account.
+          Continue with your phone number, email, or Google. Secure authentication is enabled via Firebase.
         </p>
         <div className="mt-8 flex rounded-md bg-muted p-1">
           <button
@@ -576,17 +632,46 @@ function Login({ enter }: { enter: (r: Role) => void }) {
           OR
           <span className="h-px flex-1 bg-border" />
         </div>
+
+        {errorMessage && (
+          <div role="alert" className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 p-3 text-xs leading-5 text-destructive">
+            {errorMessage}
+          </div>
+        )}
+
         <div className="space-y-3">
           <Button
             variant="outline"
+            disabled={authStatus === "loading"}
             className="h-12 w-full gap-2.5 rounded-2xl border-border/80 bg-card font-medium text-foreground shadow-soft transition-all duration-200 hover:border-border hover:bg-muted/40 active:scale-[.98]"
-            onClick={() => setShowGoogleModal(true)}
+            onClick={handleRealGoogleSignIn}
           >
-            <GoogleIcon className="size-5 shrink-0" />
-            <span>Sign in with Google</span>
+            {authStatus === "loading" ? (
+              <span className="flex items-center gap-2">
+                <span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span>Connecting with Google…</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-2.5">
+                <GoogleIcon className="size-5 shrink-0" />
+                <span>Continue with Google</span>
+              </span>
+            )}
           </Button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowGoogleModal(true)}
+              className="text-[11px] text-muted-foreground transition-colors hover:text-primary"
+            >
+              Or choose simulated test account
+            </button>
+          </div>
+
           <Button
             variant="outline"
+            disabled={authStatus === "loading"}
             className="h-12 w-full gap-2 rounded-2xl border-border/80 bg-card text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-[.98]"
             onClick={() => enter("listener")}
           >

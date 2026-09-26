@@ -89,6 +89,31 @@ Verifies a Google OAuth ID token from `expo-auth-session`.
 ```
 - **Response (200 OK):** Same as Register.
 
+### 1.4 `POST /v1/auth/firebase-google`
+Verifies a Firebase Google ID token using Firebase Admin SDK, finding or creating the user and establishing an application session.
+- **Access:** Public
+- **Request Body:**
+```json
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij..."
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "session": {
+    "id": "c8d1933e-5e36-4c8d-b94f-f131a48c69f2",
+    "firebaseUid": "k3f8s9d7f6s5...",
+    "email": "user@gmail.com",
+    "displayName": "Aarav Sharma",
+    "photoUrl": "https://lh3.googleusercontent.com/a/...",
+    "role": "USER",
+    "token": "eyJhbGciOiJIUzI1Ni..."
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
 ### 1.4 `POST /v1/auth/refresh`
 Rotates the refresh token and returns a new 15-minute access JWT.
 - **Access:** Public (Requires valid Refresh Token)

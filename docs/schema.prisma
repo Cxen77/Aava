@@ -59,6 +59,7 @@ model User {
   email            String               @unique
   passwordHash     String?
   googleId         String?              @unique
+  firebaseUid      String?              @unique
   roles            UserRole[]
   profile          Profile?
   preference       UserPreference?

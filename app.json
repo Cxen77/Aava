@@ -20,8 +20,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAF9F6"
       },
-      "package": "org.saathi.app"
+      "package": "org.saathi.app",
+      "googleServicesFile": "./google-services.json"
     },
+    "plugins": [
+      "@react-native-google-signin/google-signin"
+    ],
     "extra": {
       "eas": {
         "projectId": "2b6490d2-040f-4326-b7ec-33c09d1c70a3"
